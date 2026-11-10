@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import '../models/pdf_model.dart';
 import '../services/pdf_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -10,32 +11,47 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String? selectedPdf;
+  PdfModel? selectedPdf;
+  bool isLoading = false;
 
   Future<void> choosePdf() async {
+    setState(() {
+      isLoading = true;
+    });
+
     try {
-      final pdfName = await PdfService.pickPdf();
+      final document = await PdfService.pickPdf();
 
-      if (!mounted || pdfName == null) return;
+      if (!mounted) return;
 
-      setState(() {
-        selectedPdf = pdfName;
-      });
+      if (document != null) {
+        setState(() {
+          selectedPdf = document;
+        });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Selected: $pdfName'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Selected: ${document.name}'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     } catch (error) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Unable to select the PDF. Please try again.'),
+          content: Text(
+            'Unable to select PDF. Please try again.',
+          ),
         ),
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -43,12 +59,17 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
+
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         title: const Row(
           children: [
-            Icon(Icons.auto_awesome, color: Colors.blue, size: 28),
+            Icon(
+              Icons.auto_awesome,
+              color: Colors.blue,
+              size: 28,
+            ),
             SizedBox(width: 10),
             Text(
               'AI PDF Tutor',
@@ -77,32 +98,44 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(width: 8),
         ],
       ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+
             const Text(
-              'Hello, Student 👋',
+              'Hello, Student! 👋',
               style: TextStyle(
                 fontSize: 27,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF172554),
               ),
             ),
+
             const SizedBox(height: 8),
+
             const Text(
               'Your personal AI-powered study companion.',
-              style: TextStyle(fontSize: 15, color: Colors.black54),
+              style: TextStyle(
+                fontSize: 15,
+                color: Colors.black54,
+              ),
             ),
+
             const SizedBox(height: 25),
 
+            // PDF Upload Card
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF2563EB), Color(0xFF4F46E5)],
+                  colors: [
+                    Color(0xFF2563EB),
+                    Color(0xFF4F46E5),
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -115,14 +148,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
+
               child: Column(
                 children: [
+
                   const Icon(
                     Icons.picture_as_pdf_rounded,
                     color: Colors.white,
                     size: 58,
                   ),
+
                   const SizedBox(height: 14),
+
                   const Text(
                     'Learn from your PDFs',
                     textAlign: TextAlign.center,
@@ -132,7 +169,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+
                   const SizedBox(height: 9),
+
                   const Text(
                     'Choose a study document to get started. '
                     'AI-powered learning features are being built.',
@@ -143,26 +182,44 @@ class _HomeScreenState extends State<HomeScreen> {
                       height: 1.5,
                     ),
                   ),
+
                   const SizedBox(height: 22),
+
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: choosePdf,
-                      icon: const Icon(Icons.upload_file),
-                      label: const Text('Choose PDF'),
+                      onPressed: isLoading ? null : choosePdf,
+                      icon: isLoading
+                          ? const SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Icon(Icons.upload_file),
+                      label: Text(
+                        isLoading ? 'Selecting PDF...' : 'Choose PDF',
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: const Color(0xFF2563EB),
-                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 15,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                     ),
                   ),
+
+                  // Selected PDF Details
                   if (selectedPdf != null) ...[
                     const SizedBox(height: 16),
+
                     Container(
+                      width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.15),
@@ -174,14 +231,32 @@ class _HomeScreenState extends State<HomeScreen> {
                             Icons.check_circle,
                             color: Colors.white,
                           ),
+
                           const SizedBox(width: 10),
+
                           Expanded(
-                            child: Text(
-                              selectedPdf!,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            child: Column(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  selectedPdf!.name,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+
+                                const SizedBox(height: 4),
+
+                                Text(
+                                  'File size: ${selectedPdf!.formattedSize}',
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -193,6 +268,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
 
             const SizedBox(height: 30),
+
             const Text(
               'Study Tools',
               style: TextStyle(
@@ -201,6 +277,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Color(0xFF172554),
               ),
             ),
+
             const SizedBox(height: 15),
 
             Row(
@@ -222,7 +299,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
+
             const SizedBox(height: 12),
+
             Row(
               children: [
                 Expanded(
@@ -244,6 +323,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
 
             const SizedBox(height: 30),
+
             const Text(
               'Get Started',
               style: TextStyle(
@@ -252,7 +332,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Color(0xFF172554),
               ),
             ),
+
             const SizedBox(height: 12),
+
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(18),
@@ -263,7 +345,11 @@ class _HomeScreenState extends State<HomeScreen> {
               child: const Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.menu_book_outlined, color: Colors.blue, size: 30),
+                  Icon(
+                    Icons.menu_book_outlined,
+                    color: Colors.blue,
+                    size: 30,
+                  ),
                   SizedBox(width: 14),
                   Expanded(
                     child: Column(
@@ -291,6 +377,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
+
             const SizedBox(height: 20),
           ],
         ),
@@ -309,7 +396,9 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(17),
-        border: Border.all(color: const Color(0xFFE8EDF5)),
+        border: Border.all(
+          color: const Color(0xFFE8EDF5),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,9 +409,15 @@ class _HomeScreenState extends State<HomeScreen> {
               color: const Color(0xFFEFF6FF),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, size: 25, color: Colors.blue),
+            child: Icon(
+              icon,
+              size: 25,
+              color: Colors.blue,
+            ),
           ),
+
           const SizedBox(height: 12),
+
           Text(
             title,
             style: const TextStyle(
@@ -331,7 +426,9 @@ class _HomeScreenState extends State<HomeScreen> {
               color: Color(0xFF172554),
             ),
           ),
+
           const SizedBox(height: 5),
+
           Text(
             subtitle,
             style: const TextStyle(
