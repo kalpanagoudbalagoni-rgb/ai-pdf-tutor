@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import '../services/pdf_service.dart';
 
@@ -12,20 +13,29 @@ class _HomeScreenState extends State<HomeScreen> {
   String? selectedPdf;
 
   Future<void> choosePdf() async {
-    final pdfName = await PdfService.pickPdf();
+    try {
+      final pdfName = await PdfService.pickPdf();
 
-    if (pdfName != null) {
+      if (!mounted || pdfName == null) return;
+
       setState(() {
         selectedPdf = pdfName;
       });
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Selected: $pdfName'),
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Selected: $pdfName'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to select the PDF. Please try again.'),
+        ),
+      );
     }
   }
 
@@ -36,21 +46,35 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
-          'AI PDF Tutor',
-          style: TextStyle(
-            color: Colors.black87,
-            fontWeight: FontWeight.bold,
-          ),
+        title: const Row(
+          children: [
+            Icon(Icons.auto_awesome, color: Colors.blue, size: 28),
+            SizedBox(width: 10),
+            Text(
+              'AI PDF Tutor',
+              style: TextStyle(
+                color: Color(0xFF172554),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            tooltip: 'Profile',
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Profile feature coming soon.'),
+                ),
+              );
+            },
             icon: const Icon(
               Icons.account_circle_outlined,
-              color: Colors.black87,
+              color: Color(0xFF172554),
             ),
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: SingleChildScrollView(
@@ -61,85 +85,106 @@ class _HomeScreenState extends State<HomeScreen> {
             const Text(
               'Hello, Student 👋',
               style: TextStyle(
-                fontSize: 26,
+                fontSize: 27,
                 fontWeight: FontWeight.bold,
+                color: Color(0xFF172554),
               ),
             ),
-
             const SizedBox(height: 8),
-
             const Text(
-              'Learn smarter with your PDFs',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
+              'Your personal AI-powered study companion.',
+              style: TextStyle(fontSize: 15, color: Colors.black54),
             ),
-
             const SizedBox(height: 25),
 
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.blue,
-                borderRadius: BorderRadius.circular(20),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF2563EB), Color(0xFF4F46E5)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(22),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withValues(alpha: 0.18),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               child: Column(
                 children: [
                   const Icon(
-                    Icons.picture_as_pdf,
+                    Icons.picture_as_pdf_rounded,
                     color: Colors.white,
-                    size: 55,
+                    size: 58,
                   ),
-
-                  const SizedBox(height: 15),
-
+                  const SizedBox(height: 14),
                   const Text(
-                    'Upload Your PDF',
+                    'Learn from your PDFs',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 22,
+                      fontSize: 23,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
-                  const SizedBox(height: 8),
-
+                  const SizedBox(height: 9),
                   const Text(
-                    'Ask questions, summarize and generate quizzes using AI.',
+                    'Choose a study document to get started. '
+                    'AI-powered learning features are being built.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white70,
                       fontSize: 14,
+                      height: 1.5,
                     ),
                   ),
-
-                  const SizedBox(height: 20),
-
-                  ElevatedButton.icon(
-                    onPressed: choosePdf,
-                    icon: const Icon(Icons.upload_file),
-                    label: const Text('Choose PDF'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.blue,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 25,
-                        vertical: 14,
+                  const SizedBox(height: 22),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: choosePdf,
+                      icon: const Icon(Icons.upload_file),
+                      label: const Text('Choose PDF'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF2563EB),
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
-
                   if (selectedPdf != null) ...[
-                    const SizedBox(height: 15),
-
-                    Text(
-                      'Selected PDF: $selectedPdf',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.check_circle,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              selectedPdf!,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -148,46 +193,43 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
 
             const SizedBox(height: 30),
-
             const Text(
-              'AI Features',
+              'Study Tools',
               style: TextStyle(
                 fontSize: 21,
                 fontWeight: FontWeight.bold,
+                color: Color(0xFF172554),
               ),
             ),
-
             const SizedBox(height: 15),
 
             Row(
               children: [
                 Expanded(
                   child: featureCard(
-                    Icons.chat,
+                    Icons.chat_bubble_outline,
                     'Ask AI',
-                    'Chat with your PDF',
+                    'Ask questions about a PDF',
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: featureCard(
-                    Icons.summarize,
+                    Icons.summarize_outlined,
                     'Summary',
-                    'Get key points',
+                    'Review important points',
                   ),
                 ),
               ],
             ),
-
             const SizedBox(height: 12),
-
             Row(
               children: [
                 Expanded(
                   child: featureCard(
-                    Icons.quiz,
+                    Icons.quiz_outlined,
                     'Quiz',
-                    'Generate MCQs',
+                    'Practice with questions',
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -195,38 +237,61 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: featureCard(
                     Icons.lightbulb_outline,
                     'Explain',
-                    'Simple explanations',
+                    'Understand difficult topics',
                   ),
                 ),
               ],
             ),
 
             const SizedBox(height: 30),
-
             const Text(
-              'Recent PDFs',
+              'Get Started',
               style: TextStyle(
                 fontSize: 21,
                 fontWeight: FontWeight.bold,
+                color: Color(0xFF172554),
               ),
             ),
-
-            const SizedBox(height: 15),
-
-            pdfCard(
-              'Data Structures',
-              'PDF • Recently opened',
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.menu_book_outlined, color: Colors.blue, size: 30),
+                  SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Your study space is ready',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 6),
+                        Text(
+                          'Select a PDF above. More tools will become '
+                          'available as we build the app.',
+                          style: TextStyle(
+                            color: Colors.black54,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-
-            pdfCard(
-              'Operating Systems',
-              'PDF • Yesterday',
-            ),
-
-            pdfCard(
-              'Computer Networks',
-              'PDF • 2 days ago',
-            ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -239,94 +304,41 @@ class _HomeScreenState extends State<HomeScreen> {
     String subtitle,
   ) {
     return Container(
+      constraints: const BoxConstraints(minHeight: 145),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(17),
+        border: Border.all(color: const Color(0xFFE8EDF5)),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            size: 35,
-            color: Colors.blue,
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF6FF),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, size: 25, color: Colors.blue),
           ),
-
-          const SizedBox(height: 10),
-
+          const SizedBox(height: 12),
           Text(
             title,
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 16,
+              color: Color(0xFF172554),
             ),
           ),
-
           const SizedBox(height: 5),
-
           Text(
             subtitle,
-            textAlign: TextAlign.center,
             style: const TextStyle(
-              color: Colors.grey,
+              color: Colors.black54,
               fontSize: 12,
+              height: 1.4,
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget pdfCard(
-    String title,
-    String subtitle,
-  ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.picture_as_pdf,
-            color: Colors.red,
-            size: 35,
-          ),
-
-          const SizedBox(width: 15),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-
-                const SizedBox(height: 4),
-
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const Icon(
-            Icons.arrow_forward_ios,
-            size: 16,
-            color: Colors.grey,
           ),
         ],
       ),

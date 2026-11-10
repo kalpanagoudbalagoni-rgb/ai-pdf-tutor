@@ -1,3 +1,4 @@
+
 import 'package:file_picker/file_picker.dart';
 
 class PdfService {
@@ -7,7 +8,7 @@ class PdfService {
       allowedExtensions: ['pdf'],
     );
 
-    if (result != null && result.isNotEmpty) {
+    if (result.isNotEmpty) {
       return result.first.name;
     }
 
